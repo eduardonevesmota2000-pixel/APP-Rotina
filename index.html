@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jornada 100</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f3efe7;--card:#fffdf8;--ink:#1b2030;--mut:#6d7385;--ember:#e8590c;--moss:#2f9e63;--line:#ddd6c8;--cell:#e6e0d3;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1420;--card:#171e2e;--ink:#ede8df;--mut:#8a93a6;--ember:#ff8a3d;--moss:#5bc48a;--line:#273049;--cell:#222b40}}
+:root[data-theme="dark"]{--bg:#0f1420;--card:#171e2e;--ink:#ede8df;--mut:#8a93a6;--ember:#ff8a3d;--moss:#5bc48a;--line:#273049;--cell:#222b40}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:"Bricolage Grotesque",system-ui,-apple-system,Segoe UI,sans-serif;line-height:1.4}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.lvl{font-size:64px;font-weight:800;line-height:.9;letter-spacing:-2px;color:var(--ember)}
+.lvlname{font-size:20px;font-weight:600;margin-top:6px}
+.day{text-align:right;color:var(--mut);font-size:14px}
+.day b{display:block;font-size:28px;color:var(--ink);font-weight:800;letter-spacing:-1px}
+.bar{height:12px;background:var(--cell);border-radius:6px;margin:18px 0 6px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ember);border-radius:6px;transition:width .4s}
+.xp{display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
+.stats{display:flex;gap:10px;margin:18px 0}
+.stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.stat b{display:block;font-size:22px;font-weight:800}
+.stat span{font-size:12px;color:var(--mut)}
+h2{font-size:16px;font-weight:600;margin:22px 0 10px;color:var(--mut)}
+.habit{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);color:var(--ink);font:inherit;font-size:17px;padding:14px;border-radius:14px;margin-bottom:8px;cursor:pointer;min-height:54px}
+.habit .ck{width:26px;height:26px;border-radius:8px;border:2px solid var(--mut);flex:none;display:grid;place-items:center;font-size:16px;color:transparent}
+.habit.on{border-color:var(--moss)}
+.habit.on .ck{background:var(--moss);border-color:var(--moss);color:#fff}
+.habit.on .t{text-decoration:line-through;color:var(--mut)}
+.habit .xpv{margin-left:auto;font-size:13px;color:var(--mut)}
+.habit:focus-visible,.cell:focus-visible,button.link:focus-visible{outline:3px solid var(--ember);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px}
+.cell{aspect-ratio:1;border-radius:6px;background:var(--cell);border:0;padding:0;font-size:10px;color:var(--mut);cursor:pointer;position:relative}
+.cell.fut{opacity:.45;cursor:default}
+.cell.today{box-shadow:0 0 0 2px var(--ink)}
+.cell.sel{outline:2px solid var(--ember);outline-offset:1px}
+.cell.full{color:#fff}
+.msg{min-height:22px;font-weight:600;color:var(--ember);margin:10px 0 0}
+button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;margin-top:26px;padding:6px 0}
+.plan{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px 14px}
+.plan div{padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.plan div:last-child{border:0}
+.plan b{display:block;font-size:12px;color:var(--mut);font-weight:600}
+.pomo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.pt{font-size:56px;font-weight:800;letter-spacing:-2px;line-height:1.1}
+.pmode{color:var(--mut);font-size:14px}
+.prow{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.pb{font:inherit;font-size:15px;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;min-height:44px}
+.pb.main{background:var(--ember);border-color:var(--ember);color:#fff;font-weight:600}
+.pb:focus-visible{outline:3px solid var(--ember);outline-offset:2px}
+.cell.sun{border:1px dashed var(--mut)}
+.cell.miss{color:#d64545;font-weight:800}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div><div class="lvl" id="lvl">1</div><div class="lvlname" id="lvlname"></div></div>
+    <div class="day"><b id="daynum">Dia 1</b>de 100</div>
+  </div>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="xp"><span id="xp"></span><span id="next"></span></div>
+  <div class="msg" id="msg" aria-live="polite"></div>
+
+  <div class="stats">
+    <div class="stat"><b id="streak">0</b><span>dias seguidos</span></div>
+    <div class="stat"><b id="perfect">0</b><span>dias completos</span></div>
+    <div class="stat"><b id="today">0/10</b><span>hábitos hoje</span></div>
+  </div>
+
+  <h2 id="seltitle">Hábitos de hoje</h2>
+  <div id="habits"></div>
+
+  <h2>Plano do dia</h2>
+  <div class="plan" id="plan"></div>
+
+  <h2>Foco (pomodoro)</h2>
+  <div class="pomo">
+    <div class="pmode" id="pmode">Foco</div><div class="pt" id="pt">25:00</div>
+    <div class="prow"><button class="pb main" id="pgo">Iniciar</button><button class="pb" id="preset">Reiniciar</button><button class="pb" id="pswap">Trocar</button></div>
+    <div class="xp" style="justify-content:center" id="pinfo"></div>
+  </div>
+
+  <h2>Seus 100 dias</h2>
+  <div class="grid" id="grid"></div>
+
+  <p class="xp" style="margin-top:18px">Regras: dia útil com menos de 5 hábitos tira 20 XP. Domingo nunca penaliza e não quebra a sequência. Cada pomodoro dá +5 XP.</p>
+  <button class="link" id="reset">Recomeçar jornada do zero</button>
+</main>
+<script>
+var HABITS=[["wake","Acordar cedo"],["water","Beber água"],["run","Correr"],["push","Flexões"],["work","Treinar"],["med","Meditar"],["read","Ler"],["screen","Controlar tempo de tela"],["cold","Banho frio"],["study","Estudar"],["bible","Ler a Bíblia"]];
+var XP_H=10,BONUS=30,DAYS=100;
+var TITLES=["Iniciante","Aprendiz","Disciplinado","Constante","Focado","Forjado","Guerreiro","Mestre","Lenda","Novo Eu"];
+var mem=null;
+function load(){try{var s=localStorage.getItem("jornada100");if(s)return JSON.parse(s)}catch(e){}return mem}
+function save(){mem=S;try{localStorage.setItem("jornada100",JSON.stringify(S))}catch(e){}}
+function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function midnight(k){var p=k.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
+var S=load();
+if(!S||!S.start){S={start:dkey(new Date()),done:{}};save()}
+function todayIdx(){var n=new Date();var a=new Date(n.getFullYear(),n.getMonth(),n.getDate());return Math.round((a-midnight(S.start))/864e5)}
+function cnt(i){return (S.done[i]||[]).length}
+function dayDate(i){var d=midnight(S.start);d.setDate(d.getDate()+i);return d}
+function isSun(i){return dayDate(i).getDay()===0}
+function dayXp(i){var c=cnt(i);return c*XP_H+(c===HABITS.length?BONUS:0)+((S.pomo&&S.pomo[i])||0)*5}
+function missed(i){return i<todayIdx()&&!isSun(i)&&cnt(i)<5}
+function totalXp(){var t=0;for(var i=0;i<DAYS;i++)t+=dayXp(i)-(missed(i)?20:0);return Math.max(0,t)}
+function need(n){return 140*(n-1)*(n-1)}
+function level(xp){var n=1;while(n<10&&xp>=need(n+1))n++;return n}
+var sel=Math.min(Math.max(todayIdx(),0),DAYS-1);
+var lastLevel=level(totalXp());
+
+function render(msg){
+  var xp=totalXp(),L=level(xp),ti=todayIdx();
+  document.getElementById("lvl").textContent=L;
+  document.getElementById("lvlname").textContent=TITLES[L-1];
+  document.getElementById("daynum").textContent="Dia "+Math.min(Math.max(ti+1,1),DAYS);
+  var lo=need(L),hi=L<10?need(L+1):need(10);
+  document.getElementById("fill").style.width=(L<10?Math.min(100,(xp-lo)/(hi-lo)*100):100)+"%";
+  document.getElementById("xp").textContent=xp+" XP";
+  document.getElementById("next").textContent=L<10?"faltam "+(hi-xp)+" para o nível "+(L+1):"nível máximo";
+  var streak=0,perfect=0;
+  for(var i=0;i<DAYS;i++)if(cnt(i)===HABITS.length)perfect++;
+  var s=Math.min(ti,DAYS-1);if(cnt(s)===0)s--;
+  for(;s>=0;s--){if(cnt(s)>0)streak++;else if(!isSun(s))break}
+  document.getElementById("streak").textContent=streak;
+  document.getElementById("perfect").textContent=perfect;
+  document.getElementById("today").textContent=cnt(Math.min(Math.max(ti,0),DAYS-1))+"/"+HABITS.length;
+  document.getElementById("seltitle").textContent=sel===ti?"Hábitos de hoje":"Hábitos do dia "+(sel+1);
+  var h=document.getElementById("habits");h.innerHTML="";
+  var done=S.done[sel]||[];
+  HABITS.forEach(function(x){
+    var b=document.createElement("button");b.className="habit"+(done.indexOf(x[0])>-1?" on":"");
+    b.innerHTML='<span class="ck">✓</span><span class="t">'+x[1]+'</span><span class="xpv">+'+XP_H+'</span>';
+    b.onclick=function(){toggle(x[0])};h.appendChild(b);
+  });
+  var g=document.getElementById("grid");g.innerHTML="";
+  for(var i=0;i<DAYS;i++){(function(i){
+    var c=document.createElement("button");var n=cnt(i);
+    c.className="cell"+(isSun(i)?" sun":"")+(missed(i)?" miss":"")+(i>ti?" fut":"")+(i===ti?" today":"")+(i===sel?" sel":"")+(n===HABITS.length?" full":"");
+    c.textContent=i+1;c.setAttribute("aria-label","Dia "+(i+1)+", "+n+" de "+HABITS.length+" hábitos");
+    if(n>0){var a=.25+.75*n/HABITS.length;c.style.background="color-mix(in srgb, var(--ember) "+Math.round(a*100)+"%, var(--cell))"}
+    if(i<=ti)c.onclick=function(){sel=i;render()};
+    g.appendChild(c);
+  })(i)}
+  document.getElementById("msg").textContent=msg||"";
+  renderPlan();updPomo();
+}
+function toggle(id){
+  var d=S.done[sel]||[];var k=d.indexOf(id);
+  if(k>-1)d.splice(k,1);else d.push(id);
+  S.done[sel]=d;save();
+  var L=level(totalXp()),m="";
+  if(L>lastLevel)m="Subiu para o nível "+L+": "+TITLES[L-1]+"!";
+  else if(cnt(sel)===HABITS.length&&k===-1)m="Dia completo! +"+BONUS+" XP de bônus";
+  lastLevel=L;render(m);
+}
+document.getElementById("reset").onclick=function(){
+  if(this.dataset.arm){S={start:dkey(new Date()),done:{}};save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";render("Jornada reiniciada. Dia 1.");return}
+  this.dataset.arm="1";this.textContent="Toque de novo para apagar tudo";
+};
+var BOOKS=[["Mateus",28],["Marcos",16],["Lucas",24],["João",21]];
+var TREINO=["Descanso ativo: caminhada leve de 30 min","Peito e tríceps + flexões","Corrida leve de 30 min","Costas e bíceps","Corrida intervalada de 20 min + core","Pernas e glúteos","Corrida longa de 40 min + alongamento"];
+var ESTUDO=["Revisão leve: refazer só as questões que errou na semana (30 min)","Termodinâmica (90 min)","Mecânica dos fluidos (90 min)","Resistência dos materiais (90 min)","Elementos de máquinas (90 min)","Transferência de calor (90 min)","Português e Inglês: questões da banca (90 min)"];
+var PT="Português: ler 1 editorial e resumir a ideia central em 2 linhas",EN="Inglês: ler 1 artigo técnico de engenharia (15 min) e anotar 5 termos";
+var LEITURA=["Livre: o livro que você quiser, 20 min",PT,EN,PT,EN,PT,EN];
+function bibleRef(i){
+  if(isSun(i))return "Domingo livre: releia o trecho que mais marcou na semana";
+  var n=0;for(var k=0;k<=i;k++)if(!isSun(k))n++;
+  for(var b=0;b<BOOKS.length;b++){if(n<=BOOKS[b][1])return BOOKS[b][0]+" "+n;n-=BOOKS[b][1]}
+  return "Plano concluído: Provérbios "+dayDate(i).getDate();
+}
+function renderPlan(){
+  var w=dayDate(sel).getDay();
+  var rows=[["Treino",TREINO[w]],["Estudo",ESTUDO[w]],["Leitura",LEITURA[w]],["Bíblia",bibleRef(sel)]];
+  var h=w===0?'<div><b>Domingo</b>Dia de descanso: não conta como falta.</div>':"";
+  rows.forEach(function(r){h+="<div><b>"+r[0]+"</b>"+r[1]+"</div>"});
+  document.getElementById("plan").innerHTML=h;
+}
+var PM={mode:"foco",left:1500,run:false,end:0,t:null};
+function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
+function tIdx(){return Math.min(Math.max(todayIdx(),0),DAYS-1)}
+function updPomo(){
+  var n=(S.pomo&&S.pomo[tIdx()])||0;
+  document.getElementById("pt").textContent=fmt(PM.left);
+  document.getElementById("pmode").textContent=PM.mode==="foco"?"Foco":"Pausa";
+  document.getElementById("pgo").textContent=PM.run?"Pausar":"Iniciar";
+  document.getElementById("pinfo").textContent="Hoje: "+n+" pomodoros ("+n*25+" min). Meta: 4, cerca de 2 h.";
+}
+function tick(){var l=Math.max(0,Math.round((PM.end-Date.now())/1000));PM.left=l;if(l===0){finish();return}updPomo()}
+function finish(){
+  clearInterval(PM.t);PM.run=false;var m="";
+  if(PM.mode==="foco"){var ti=tIdx();S.pomo=S.pomo||{};S.pomo[ti]=(S.pomo[ti]||0)+1;save();PM.mode="pausa";PM.left=300;m="Pomodoro concluído! +5 XP. Hora da pausa."}
+  else{PM.mode="foco";PM.left=1500;m="Pausa acabou. Bora focar."}
+  try{if(navigator.vibrate)navigator.vibrate(300)}catch(e){}
+  var L=level(totalXp());if(L>lastLevel)m="Subiu para o nível "+L+": "+TITLES[L-1]+"!";
+  lastLevel=L;render(m);
+}
+document.getElementById("pgo").onclick=function(){
+  if(PM.run){clearInterval(PM.t);PM.run=false}
+  else{PM.end=Date.now()+PM.left*1000;PM.run=true;PM.t=setInterval(tick,500)}
+  updPomo();
+};
+document.getElementById("preset").onclick=function(){clearInterval(PM.t);PM.run=false;PM.left=PM.mode==="foco"?1500:300;updPomo()};
+document.getElementById("pswap").onclick=function(){clearInterval(PM.t);PM.run=false;PM.mode=PM.mode==="foco"?"pausa":"foco";PM.left=PM.mode==="foco"?1500:300;updPomo()};
+render();
+</script>
+</body>
+</html>
