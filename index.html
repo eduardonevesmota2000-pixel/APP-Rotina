@@ -73,10 +73,16 @@ summary{cursor:pointer;font-weight:800;padding:6px 0}
 button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13px;text-decoration:underline;cursor:pointer;margin-top:20px;padding:6px 0}
 [hidden]{display:none!important}
 .tabs{display:flex;gap:6px;margin:16px 0 4px}
-.tabs button{flex:1;font:inherit;font-weight:800;font-size:14px;padding:12px 4px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer;min-height:44px}
+.tabs button{flex:1;font:inherit;font-weight:800;font-size:13px;padding:12px 2px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--mut);cursor:pointer;min-height:44px}
 .tabs button.on{background:var(--ember);border-color:var(--ember);color:#fff}
 .goalbox{background:var(--card);border:2px solid var(--line);border-radius:14px;padding:2px 14px}
 .goalbox .g:first-child{border-top:0}
+.item{display:flex;align-items:center;gap:10px;background:var(--card);border:2px solid var(--line);border-radius:16px;padding:12px;margin-bottom:8px}
+.item .pb{white-space:nowrap}
+.x{background:none;border:0;color:var(--mut);font-size:18px;cursor:pointer;min-width:36px;min-height:44px}
+.wallet{font-size:16px;color:var(--gold);text-align:center;padding:16px;background:var(--card);border:2px solid var(--gold);border-radius:16px}
+.addbox{display:flex;gap:8px;flex-wrap:wrap}
+.wide{flex:1;min-width:150px;width:auto;text-align:left}
 </style>
 </head>
 <body>
@@ -100,7 +106,7 @@ button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13p
   </div>
   <div class="small" id="daylbl" style="margin-left:2px"></div>
 
-  <nav class="tabs" role="tablist"><button id="nav-missoes" class="on" role="tab">Missões</button><button id="nav-foco" role="tab">Foco</button><button id="nav-jornada" role="tab">Jornada</button><button id="nav-metas" role="tab">Metas</button></nav>
+  <nav class="tabs" role="tablist"><button id="nav-missoes" class="on" role="tab">Missões</button><button id="nav-foco" role="tab">Foco</button><button id="nav-jornada" role="tab">Jornada</button><button id="nav-loja" role="tab">Loja</button><button id="nav-metas" role="tab">Metas</button></nav>
   <section class="tab" id="tab-missoes">
   <h2 id="seltitle">Missões de hoje</h2>
   <div id="habits"></div>
@@ -123,6 +129,16 @@ button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13p
   <div class="badges" id="badges"></div>
   <h2>Seus 100 dias</h2>
   <div class="grid" id="grid"></div>
+  </section>
+  <section class="tab" id="tab-loja" hidden>
+  <h2>Loja de recompensas</h2>
+  <div class="wallet px" id="wallet">🪙 0</div>
+  <div class="msg" id="smsg" aria-live="polite"></div>
+  <div id="shop"></div>
+  <h2>Mochila</h2>
+  <div id="bag"></div>
+  <h2>Nova recompensa</h2>
+  <div class="addbox"><input class="val wide" id="ni" placeholder="Nome da recompensa" maxlength="40" aria-label="Nome da recompensa"><input class="val" id="np" type="number" min="1" inputmode="numeric" placeholder="Preço" aria-label="Preço em moedas"><button class="pb main" id="nadd">Adicionar</button></div>
   </section>
   <section class="tab" id="tab-metas" hidden>
   <h2>Metas</h2>
@@ -154,7 +170,9 @@ function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0
 function midnight(k){var p=k.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
 var S=load();
 if(!S||!S.start){S={start:dkey(new Date()),vals:{},goals:{},pomo:{}};save()}
+var DEFAULT_SHOP=[{id:"d1",e:"🎬",n:"Um episódio de série",p:40},{id:"d2",e:"🍫",n:"Um doce",p:60},{id:"d3",e:"🎮",n:"1h de videogame",p:80},{id:"d4",e:"😴",n:"Dormir até mais tarde no domingo",p:100},{id:"d5",e:"🍕",n:"Refeição livre",p:150},{id:"d6",e:"🍿",n:"Maratona de filme",p:200}];
 S.vals=S.vals||{};S.goals=S.goals||{};S.pomo=S.pomo||{};
+S.shop=S.shop||{items:null,bag:[],spent:0};if(!S.shop.items)S.shop.items=JSON.parse(JSON.stringify(DEFAULT_SHOP));
 function todayIdx(){var n=new Date();return Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-midnight(S.start))/864e5)}
 function tIdx(){return Math.min(Math.max(todayIdx(),0),DAYS-1)}
 function dayDate(i){var d=midnight(S.start);d.setDate(d.getDate()+i);return d}
@@ -218,7 +236,7 @@ function render(msg){
   document.getElementById("xpt").textContent="⚡ "+xp+" XP";
   document.getElementById("nx").textContent=L<10?"faltam "+(hi-xp):"nível máximo";
   document.getElementById("streak").textContent=st.streak;
-  document.getElementById("gold").textContent=st.gold;
+  document.getElementById("gold").textContent=st.gold-S.shop.spent;
   document.getElementById("today").textContent=cnt(tIdx())+"/"+H.length;
   document.getElementById("daylbl").textContent="Dia "+Math.min(Math.max(ti+1,1),DAYS)+" de 100"+(sel!==ti?" · editando o dia "+(sel+1):"");
   document.getElementById("seltitle").textContent=sel===ti?"Missões de hoje":"Missões do dia "+(sel+1);
@@ -245,7 +263,7 @@ function render(msg){
     });
   }
   document.getElementById("msg").textContent=msg||"";
-  renderPlan();updPomo();
+  renderPlan();updPomo();renderShop();
 }
 var BOOKS=[["Mateus",28],["Marcos",16],["Lucas",24],["João",21]];
 var TREINO=["Descanso ativo: caminhada leve de 30 min","Peito e tríceps + flexões","Corrida leve de 30 min","Costas e bíceps","Corrida intervalada de 20 min + core","Pernas e glúteos","Corrida longa de 40 min + alongamento"];
@@ -289,11 +307,42 @@ document.getElementById("pgo").onclick=function(){
 document.getElementById("preset").onclick=function(){clearInterval(PM.t);PM.run=false;PM.left=PM.mode==="foco"?1500:300;updPomo()};
 document.getElementById("pswap").onclick=function(){clearInterval(PM.t);PM.run=false;PM.mode=PM.mode==="foco"?"pausa":"foco";PM.left=PM.mode==="foco"?1500:300;updPomo()};
 document.getElementById("reset").onclick=function(){
-  if(this.dataset.arm){S={start:dkey(new Date()),vals:{},goals:{},pomo:{}};save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";document.getElementById("goals").innerHTML="";document.getElementById("goals").dataset.built="";render("Jornada reiniciada. Dia 1.");return}
+  if(this.dataset.arm){S={start:dkey(new Date()),vals:{},goals:{},pomo:{},shop:{items:JSON.parse(JSON.stringify(DEFAULT_SHOP)),bag:[],spent:0}};save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";document.getElementById("goals").innerHTML="";document.getElementById("goals").dataset.built="";render("Jornada reiniciada. Dia 1.");return}
   this.dataset.arm="1";this.textContent="Toque de novo para apagar tudo";
 };
-var TABS=["missoes","foco","jornada","metas"];
-function showTab(t){TABS.forEach(function(x){document.getElementById("tab-"+x).hidden=x!==t;var b=document.getElementById("nav-"+x);b.setAttribute("aria-selected",x===t?"true":"false");b.classList.toggle("on",x===t)});window.scrollTo(0,0)}
+var armed=null;
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function bal(){return stats().gold-S.shop.spent}
+function sm(t){document.getElementById("smsg").textContent=t}
+function renderShop(){
+  var b=bal();
+  document.getElementById("wallet").textContent="🪙 "+b+" moedas";
+  var s=document.getElementById("shop");s.innerHTML="";
+  S.shop.items.forEach(function(it){
+    var ok=b>=it.p,arm=armed===it.id,d=document.createElement("div");
+    d.className="item";
+    d.innerHTML='<span class="ic">'+it.e+'</span><div class="mid"><div class="nm">'+esc(it.n)+'</div><div class="sb">🪙 '+it.p+'</div></div><button class="pb'+(ok?" main":"")+'">'+(arm?"Confirmar":ok?"Comprar":"Faltam "+(it.p-b))+'</button><button class="x" aria-label="Remover da loja">✕</button>';
+    var bs=d.querySelectorAll("button");
+    bs[0].onclick=function(){if(!ok)return;if(!arm){armed=it.id;renderShop();return}armed=null;S.shop.spent+=it.p;S.shop.bag.push({n:it.n,e:it.e});save();render();sm("🛍️ Comprou: "+it.n+". Está na sua mochila.")};
+    bs[1].onclick=function(){S.shop.items=S.shop.items.filter(function(x){return x.id!==it.id});save();renderShop()};
+    s.appendChild(d);
+  });
+  var g=document.getElementById("bag");g.innerHTML="";
+  if(!S.shop.bag.length)g.innerHTML='<div class="small">Mochila vazia. Compre uma recompensa pra guardar aqui.</div>';
+  S.shop.bag.forEach(function(it,i){
+    var d=document.createElement("div");d.className="item";
+    d.innerHTML='<span class="ic">'+it.e+'</span><div class="mid"><div class="nm">'+esc(it.n)+'</div></div><button class="pb main">Usar</button>';
+    d.querySelector("button").onclick=function(){S.shop.bag.splice(i,1);save();renderShop();sm("Aproveite: "+it.n+"! Você merece.")};
+    g.appendChild(d);
+  });
+}
+document.getElementById("nadd").onclick=function(){
+  var n=document.getElementById("ni"),p=document.getElementById("np"),v=parseInt(p.value,10);
+  if(!n.value.trim()||!(v>0)){sm("Preencha o nome e um preço maior que zero.");return}
+  S.shop.items.push({id:"u"+Date.now(),e:"🎁",n:n.value.trim(),p:v});n.value="";p.value="";save();renderShop();sm("Recompensa adicionada.");
+};
+var TABS=["missoes","foco","jornada","loja","metas"];
+function showTab(t){TABS.forEach(function(x){document.getElementById("tab-"+x).hidden=x!==t;var b=document.getElementById("nav-"+x);b.setAttribute("aria-selected",x===t?"true":"false");b.classList.toggle("on",x===t)});armed=null;window.scrollTo(0,0)}
 TABS.forEach(function(x){document.getElementById("nav-"+x).onclick=function(){showTab(x)}});
 render();
 showTab("missoes");
