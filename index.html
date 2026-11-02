@@ -209,6 +209,9 @@ textarea{font:inherit;font-size:15px;padding:10px;border-radius:10px;border:2px 
       <button class="pb" id="syncnow" hidden>Sincronizar agora</button>
       <button class="pb" id="logout" hidden>Sair</button>
     </div>
+    <div id="pwbox" hidden style="margin-top:12px"><div class="small">Alterar senha</div>
+      <div class="prow" style="justify-content:flex-start"><input class="val" style="width:190px" id="np1" type="password" autocomplete="new-password" placeholder="Nova senha" aria-label="Nova senha"><button class="pb" id="chpw">Salvar</button></div>
+      <div class="small" id="pwmsg"></div></div>
   </div>
   <p class="small" style="margin-top:18px">Regras: hábito vale +10 XP e dia completo +30. Pomodoro +5. Dia útil com menos da metade dos hábitos tira 20 XP. Domingo livre nunca penaliza (ajustável em Hábitos).</p>
   <button class="link" id="reset">Recomeçar jornada do zero</button>
@@ -217,11 +220,22 @@ textarea{font:inherit;font-size:15px;padding:10px;border-radius:10px;border:2px 
 <div class="authwrap" id="auth" hidden><div class="authbox">
   <div class="px" style="color:var(--gold);font-size:16px">Jornada 100</div>
   <p class="small">Entre para salvar seu progresso na nuvem e usar em qualquer aparelho.</p>
-  <input class="val" style="width:100%" id="ae" type="email" autocomplete="email" placeholder="E-mail" aria-label="E-mail">
+  <input class="val" style="width:100%" id="ae" type="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="E-mail" aria-label="E-mail">
   <input class="val" style="width:100%" id="ap" type="password" autocomplete="current-password" placeholder="Senha (mínimo 6 caracteres)" aria-label="Senha">
   <div class="prow"><button class="pb main" id="alogin">Entrar</button><button class="pb" id="asign">Criar conta</button></div>
   <div class="msg" id="amsg" aria-live="polite"></div>
+  <button class="link" id="showpw">Mostrar senha</button>
+  <button class="link" id="forgot">Esqueci minha senha</button>
   <button class="link" id="aguest">Continuar sem conta (só neste aparelho)</button>
+</div></div>
+<div class="authwrap" id="newpw" hidden><div class="authbox">
+  <div class="px" style="color:var(--gold);font-size:14px">Nova senha</div>
+  <p class="small">Escolha uma nova senha para a sua conta.</p>
+  <input class="val" style="width:100%" id="np2" type="password" autocomplete="new-password" placeholder="Nova senha (mínimo 6 caracteres)" aria-label="Nova senha">
+  <input class="val" style="width:100%" id="np3" type="password" autocomplete="new-password" placeholder="Repita a nova senha" aria-label="Repita a nova senha">
+  <button class="pb main" id="npsave">Salvar nova senha</button>
+  <div class="msg" id="npmsg" aria-live="polite"></div>
+  <button class="link" id="npback">Voltar</button>
 </div></div>
 <div class="authwrap" id="choice" hidden><div class="authbox">
   <div class="px" style="color:var(--gold);font-size:14px">Primeiro acesso</div>
@@ -548,6 +562,7 @@ TABS.forEach(function(x){document.getElementById("nav-"+x).onclick=function(){sh
 /* ===== Conta e banco de dados (Supabase) ===== */
 var SB_URL="https://rdzzejhjyhhhcjetwcnj.supabase.co",SB_KEY="sb_publishable_aApHftgO50l1IQGUzB8AJA_HzUi4pvV";
 var sb=null,user=null,snap=null,syncT=null,syncing=false,syncAgain=false,gate=Promise.resolve(),lastPull=0;
+var RECOVERY=/type=recovery/.test((location.hash||"")+(location.search||"")),recovering=RECOVERY,SITE=location.origin+location.pathname.replace(/index\.html$/,"");
 try{if(window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY)}catch(e){}
 function uuid(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return (c==="x"?r:(r&3|8)).toString(16)})}
 function dkeyOf(start,i){var d=midnight(start);d.setDate(d.getDate()+i);return dkey(d)}
@@ -657,7 +672,7 @@ function showAuth(){el("app").hidden=true;el("choice").hidden=true;el("auth").hi
 function showChoice(){el("app").hidden=true;el("auth").hidden=true;el("choice").hidden=false}
 function updAcct(){
   el("acct").textContent=user?"Conectado como "+user.email+".":"Sem conta: seus dados ficam só neste aparelho.";
-  el("logout").hidden=!user;el("syncnow").hidden=!user;el("gologin").hidden=!!user;
+  el("logout").hidden=!user;el("pwbox").hidden=!user;el("syncnow").hidden=!user;el("gologin").hidden=!!user;
 }
 async function onLogin(u){
   user=u;setStatus("Carregando…");
@@ -706,14 +721,51 @@ document.addEventListener("visibilitychange",function(){
   if(document.hidden||!user||syncing)return;
   if(!snap)onLogin(user);else if(S.dirty)syncUp();else if(Date.now()-lastPull>30000)onLogin(user);
 });
+function showNewPw(){el("app").hidden=true;el("auth").hidden=true;el("choice").hidden=true;el("newpw").hidden=false}
+el("showpw").onclick=function(){var p=el("ap"),h=p.type==="password";p.type=h?"text":"password";this.textContent=h?"Ocultar senha":"Mostrar senha"};
+el("forgot").onclick=async function(){
+  var m=el("amsg"),email=el("ae").value.trim();
+  if(!sb){m.textContent="Serviço de conta indisponível agora.";return}
+  if(!email){m.textContent="Digite seu e-mail acima e toque de novo.";return}
+  m.textContent="Enviando…";
+  try{
+    var r=await sb.auth.resetPasswordForEmail(email,{redirectTo:SITE});
+    m.textContent=r.error?authMsg(r.error):"Se esse e-mail tiver conta, enviamos um link para criar uma nova senha. Olhe também o spam.";
+  }catch(e){m.textContent=authMsg(e)}
+};
+el("npsave").onclick=async function(){
+  var m=el("npmsg"),a=el("np2").value,b=el("np3").value;
+  if(a.length<6){m.textContent="A senha precisa ter pelo menos 6 caracteres.";return}
+  if(a!==b){m.textContent="As senhas não são iguais.";return}
+  m.textContent="Salvando…";
+  try{
+    var r=await sb.auth.updateUser({password:a});
+    if(r.error){m.textContent=/session/i.test(r.error.message||"")?"Link expirado ou já usado. Toque em Voltar e peça outro.":authMsg(r.error);return}
+    recovering=false;try{history.replaceState(null,"",location.pathname)}catch(e){}
+    el("newpw").hidden=true;
+    var ss=await sb.auth.getSession();
+    if(ss.data&&ss.data.session)await onLogin(ss.data.session.user);else showAuth();
+  }catch(e){m.textContent=authMsg(e)}
+};
+el("npback").onclick=function(){recovering=false;try{history.replaceState(null,"",location.pathname)}catch(e){}el("newpw").hidden=true;showAuth()};
+el("chpw").onclick=async function(){
+  var m=el("pwmsg"),v=el("np1").value;
+  if(v.length<6){m.textContent="Mínimo de 6 caracteres.";return}
+  m.textContent="Salvando…";
+  try{var r=await sb.auth.updateUser({password:v});m.textContent=r.error?authMsg(r.error):"Senha alterada!";if(!r.error)el("np1").value=""}catch(e){m.textContent=authMsg(e)}
+};
 async function boot(){
   try{
     if(!sb){showApp();updAcct();setStatus("Serviço de conta indisponível. Modo local.");return}
+    sb.auth.onAuthStateChange(function(ev){
+      if(ev==="PASSWORD_RECOVERY"){recovering=true;showNewPw()}
+      else if(ev==="SIGNED_OUT"&&user){user=null;location.reload()}
+    });
     var r=await sb.auth.getSession();
+    if(recovering){showNewPw();return}
     if(r.data&&r.data.session)await onLogin(r.data.session.user);
     else if(S.guest)showApp();
     else showAuth();
-    sb.auth.onAuthStateChange(function(ev){if(ev==="SIGNED_OUT"&&user){user=null;location.reload()}});
   }catch(e){showApp()}
   updAcct();
 }
