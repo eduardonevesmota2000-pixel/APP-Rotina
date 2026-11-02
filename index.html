@@ -83,6 +83,25 @@ button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13p
 .wallet{font-size:16px;color:var(--gold);text-align:center;padding:16px;background:var(--card);border:2px solid var(--gold);border-radius:16px}
 .addbox{display:flex;gap:8px;flex-wrap:wrap}
 .wide{flex:1;min-width:150px;width:auto;text-align:left}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form2{display:flex;gap:8px;flex-wrap:wrap}
+.form2 select{width:auto}
+.g button.x.arm{color:var(--bad);font-weight:800;font-size:13px}
+.cath{display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;color:var(--mut);margin:14px 2px 8px}
+.cath i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.sb2{font-size:11px;color:var(--mut);font-weight:400}
+.dchips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.dchips button{font:inherit;font-weight:800;min-width:40px;min-height:40px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--mut);cursor:pointer;padding:0 8px}
+.dchips button.on{background:var(--ember);border-color:var(--ember);color:#fff}
+.dchips button.pre{font-weight:600;font-size:12px}
+textarea{font:inherit;font-size:15px;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%;resize:vertical;margin-top:6px}
+.chart{display:flex;align-items:flex-end;gap:6px;min-height:130px;background:var(--card);border:2px solid var(--line);border-radius:14px;padding:12px;overflow-x:auto}
+.chart .b{flex:1;min-width:20px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.chart .b i{display:block;width:100%;background:var(--ember);border-radius:6px 6px 0 0;min-height:2px}
+.chart .b span{font-size:10px;color:var(--mut)}
+.bars .row{display:grid;grid-template-columns:130px 1fr 44px;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}
+.bars .row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bars .row span:last-child{text-align:right;color:var(--mut)}
 </style>
 </head>
 <body>
@@ -106,12 +125,12 @@ button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13p
   </div>
   <div class="small" id="daylbl" style="margin-left:2px"></div>
 
-  <nav class="tabs" role="tablist"><button id="nav-missoes" class="on" role="tab">Missões</button><button id="nav-foco" role="tab">Foco</button><button id="nav-jornada" role="tab">Jornada</button><button id="nav-loja" role="tab">Loja</button><button id="nav-metas" role="tab">Metas</button></nav>
+  <nav class="tabs" role="tablist"><button id="nav-missoes" class="on" role="tab">Missões</button><button id="nav-foco" role="tab">Foco</button><button id="nav-jornada" role="tab">Jornada</button><button id="nav-loja" role="tab">Loja</button><button id="nav-metas" role="tab">Hábitos</button></nav>
   <section class="tab" id="tab-missoes">
   <h2 id="seltitle">Missões de hoje</h2>
   <div id="habits"></div>
 
-  <h2>Plano do dia</h2>
+  <h2>Agenda do dia</h2>
   <div class="plan" id="plan"></div>
   </section>
 
@@ -121,10 +140,21 @@ button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13p
     <div class="pmode" id="pmode">Foco</div><div class="pt px" id="pt">25:00</div>
     <div class="prow"><button class="pb main" id="pgo">Iniciar</button><button class="pb" id="preset">Reiniciar</button><button class="pb" id="pswap">Trocar</button></div>
     <div class="small" id="pinfo"></div>
+    <div class="two" style="margin-top:12px"><label class="small">Foco (min)<input class="val" style="width:100%" id="pf" type="number" min="1" max="180" inputmode="numeric"></label><label class="small">Pausa (min)<input class="val" style="width:100%" id="pp" type="number" min="1" max="60" inputmode="numeric"></label></div>
   </div>
 
   </section>
   <section class="tab" id="tab-jornada" hidden>
+  <h2>Estatísticas</h2>
+  <div class="stats" id="statcards"></div>
+  <h2>Últimos 7 dias (% concluído)</h2>
+  <div class="chart" id="stats7"></div>
+  <h2>Por semana</h2>
+  <div class="chart" id="statsw"></div>
+  <h2>Por categoria</h2>
+  <div class="bars" id="statcat"></div>
+  <h2>Por hábito</h2>
+  <div class="bars" id="stath"></div>
   <h2>Conquistas</h2>
   <div class="badges" id="badges"></div>
   <h2>Seus 100 dias</h2>
@@ -142,25 +172,46 @@ button.link{background:none;border:0;color:var(--mut);font:inherit;font-size:13p
   </section>
   <section class="tab" id="tab-metas" hidden>
   <h2>Metas</h2>
-  <div class="small" style="margin:-4px 2px 10px">Defina a meta de cada hábito. Ela vale para todos os dias.</div>
+  <div class="small" style="margin:-4px 2px 10px">Ajuste a meta de cada hábito, exclua (toque duas vezes no ✕) ou crie novos. Hábito novo vale a partir de hoje.</div>
   <div id="goals" class="goalbox"></div>
+  <h2>Lembretes e preferências</h2>
+  <div class="goalbox" style="padding:12px 14px">
+    <button class="pb main" id="notif">Ativar notificações</button>
+    <div class="small" id="notifst" style="margin-top:8px"></div>
+    <div class="small" style="margin-top:8px">Os lembretes disparam com o app aberto ou ativo em segundo plano. Com o app totalmente fechado, só com um servidor de push (entra junto com o banco de dados).</div>
+    <label class="g" style="margin-top:10px"><span style="flex:1">Domingo é dia livre (sem penalidade)</span><input type="checkbox" id="sunfree" style="width:24px;height:24px"></label>
+  </div>
+  <h2 id="hft">Novo hábito</h2>
+  <div class="form2">
+    <input class="val wide" id="hn" placeholder="Ex.: Alongar, Inglês" maxlength="30" aria-label="Nome do hábito">
+    <input class="val" id="he" placeholder="😀" maxlength="4" style="width:64px" aria-label="Emoji">
+    <select id="hc" class="val wide" aria-label="Categoria"></select>
+    <select id="ht" class="val wide" aria-label="Tipo de meta"><option value="min">Quantidade mínima</option><option value="max">Limite máximo</option><option value="time">Horário (até)</option><option value="chk">Só marcar</option></select>
+    <input class="val" id="hg" type="number" step="any" min="0" placeholder="Meta" aria-label="Valor da meta">
+    <input class="val" id="hu" placeholder="Unidade" maxlength="8" aria-label="Unidade">
+    <div style="width:100%"><div class="small">Dias da semana</div>
+      <div class="dchips" id="hd"><button data-d="0">D</button><button data-d="1">S</button><button data-d="2">T</button><button data-d="3">Q</button><button data-d="4">Q</button><button data-d="5">S</button><button data-d="6">S</button></div>
+      <div class="dchips" style="margin-top:6px"><button class="pre" data-p="all">Todos</button><button class="pre" data-p="work">Dias úteis</button><button class="pre" data-p="wknd">Fim de semana</button></div>
+    </div>
+    <label class="small" style="width:100%">Lembrete (opcional)<input class="val" style="width:100%" id="hr" type="time"></label>
+    <button class="pb main" id="hadd">Adicionar</button><button class="pb" id="hcancel" hidden>Cancelar</button>
+  </div>
+  <div class="msg" id="hmsg" aria-live="polite"></div>
 
-  <p class="small" style="margin-top:18px">Regras: hábito vale +10 XP e dia completo +30. Pomodoro +5. Dia útil com menos de 5 hábitos tira 20 XP. Domingo nunca penaliza.</p>
+  <p class="small" style="margin-top:18px">Regras: hábito vale +10 XP e dia completo +30. Pomodoro +5. Dia útil com menos da metade dos hábitos tira 20 XP. Domingo livre nunca penaliza (ajustável em Hábitos).</p>
   <button class="link" id="reset">Recomeçar jornada do zero</button>
 </section>
 </main>
 <script>
-var H=[
-{id:"wake",n:"Acordar cedo",i:"⏰",t:"time",g:"05:00"},
-{id:"water",n:"Beber água",i:"💧",t:"min",g:3,u:"L",step:.25},
-{id:"run",n:"Correr",i:"🏃",t:"min",g:5,u:"km",step:.5},
-{id:"push",n:"Flexões",i:"💪",t:"min",g:50,u:"rep",step:5},
-{id:"work",n:"Treinar",i:"🏋️",t:"min",g:60,u:"min",step:5},
-{id:"med",n:"Meditar",i:"🧘",t:"min",g:10,u:"min",step:1},
-{id:"read",n:"Ler",i:"📖",t:"min",g:10,u:"pág",step:1},
-{id:"screen",n:"Tempo de tela",i:"📵",t:"max",g:3,u:"h",step:.5},
-{id:"study",n:"Estudar",i:"🎓",t:"min",g:90,u:"min",step:15},
-{id:"bible",n:"Ler a Bíblia",i:"📜",t:"chk"}];
+var CATS=[{id:"saude",n:"Saúde",c:"#4cd694"},{id:"estudos",n:"Estudos",c:"#6ea8ff"},{id:"trabalho",n:"Trabalho",c:"#ffc83d"},{id:"pessoal",n:"Cuidados pessoais",c:"#ff8fb8"},{id:"outros",n:"Outros",c:"#9a92c4"}];
+var DEFAULT_H=[
+{id:"wake",n:"Acordar cedo",i:"⏰",t:"time",g:"06:00",cat:"pessoal"},
+{id:"water",n:"Beber água",i:"💧",t:"min",g:2,u:"L",step:.25,cat:"saude"},
+{id:"run",n:"Atividade física",i:"🏃",t:"min",g:30,u:"min",step:5,cat:"saude"},
+{id:"med",n:"Meditar",i:"🧘",t:"min",g:10,u:"min",step:1,cat:"pessoal"},
+{id:"read",n:"Ler",i:"📖",t:"min",g:10,u:"pág",step:1,cat:"estudos"},
+{id:"screen",n:"Tempo de tela",i:"📵",t:"max",g:3,u:"h",step:.5,cat:"pessoal"},
+{id:"study",n:"Estudar",i:"🎓",t:"min",g:60,u:"min",step:15,cat:"estudos"}];
 var DAYS=100,TITLES=["Iniciante","Aprendiz","Disciplinado","Constante","Focado","Forjado","Guerreiro","Mestre","Lenda","Novo Eu"];
 var AV=["🥚","🐣","🐥","🦊","🐺","🦁","🐲","🧙","🦄","👑"];
 var KEY="jornada100v2",mem=null;
@@ -173,36 +224,39 @@ if(!S||!S.start){S={start:dkey(new Date()),vals:{},goals:{},pomo:{}};save()}
 var DEFAULT_SHOP=[{id:"d1",e:"🎬",n:"Um episódio de série",p:40},{id:"d2",e:"🍫",n:"Um doce",p:60},{id:"d3",e:"🎮",n:"1h de videogame",p:80},{id:"d4",e:"😴",n:"Dormir até mais tarde no domingo",p:100},{id:"d5",e:"🍕",n:"Refeição livre",p:150},{id:"d6",e:"🍿",n:"Maratona de filme",p:200}];
 S.vals=S.vals||{};S.goals=S.goals||{};S.pomo=S.pomo||{};
 S.shop=S.shop||{items:null,bag:[],spent:0};if(!S.shop.items)S.shop.items=JSON.parse(JSON.stringify(DEFAULT_SHOP));
+S.pset=S.pset||{foco:25,pausa:5};S.habits=S.habits||JSON.parse(JSON.stringify(DEFAULT_H));var H=S.habits;S.notes=S.notes||{};S.notified=S.notified||{};H.forEach(function(h){if(!h.cat){var d=DEFAULT_H.filter(function(x){return x.id===h.id})[0];h.cat=d?d.cat:"outros"}});
 function todayIdx(){var n=new Date();return Math.round((new Date(n.getFullYear(),n.getMonth(),n.getDate())-midnight(S.start))/864e5)}
 function tIdx(){return Math.min(Math.max(todayIdx(),0),DAYS-1)}
 function dayDate(i){var d=midnight(S.start);d.setDate(d.getDate()+i);return d}
-function isSun(i){return dayDate(i).getDay()===0}
+function isSun(i){return S.sunFree!==false&&dayDate(i).getDay()===0}
 function goal(h){return S.goals[h.id]!==undefined&&S.goals[h.id]!==""?S.goals[h.id]:h.g}
 function V(i,id){return (S.vals[i]||{})[id]}
 function done(i,h){var v=V(i,h.id);if(h.t==="chk")return v===1;if(v===undefined||v==="")return false;
   if(h.t==="time")return v<=goal(h);if(h.t==="max")return +v<=+goal(h);return +v>=+goal(h)}
-function cnt(i){var c=0;H.forEach(function(h){if(done(i,h))c++});return c}
-function dayXp(i){var c=cnt(i);return c*10+(c===H.length?30:0)+(S.pomo[i]||0)*5}
-function missed(i){return i<todayIdx()&&!isSun(i)&&cnt(i)<5}
+function act(h,i){return (h.from||0)<=i&&(!h.days||h.days.indexOf(dayDate(i).getDay())>-1)}
+function nAct(i){return H.filter(function(h){return act(h,i)}).length}
+function cnt(i){var c=0;H.forEach(function(h){if(act(h,i)&&done(i,h))c++});return c}
+function dayXp(i){var c=cnt(i);return c*10+(c>0&&c===nAct(i)?30:0)+(S.pomo[i]||0)*5}
+function missed(i){return i<todayIdx()&&!isSun(i)&&cnt(i)<Math.ceil(nAct(i)/2)}
 function totalXp(){var t=0;for(var i=0;i<DAYS;i++)t+=dayXp(i)-(missed(i)?20:0);return Math.max(0,t)}
 function need(n){return 150*(n-1)*(n-1)}
 function level(x){var n=1;while(n<10&&x>=need(n+1))n++;return n}
 var sel=tIdx(),lastLevel=level(totalXp());
 
 function stats(){
-  var ti=todayIdx(),run=0,max=0,perfect=0,active=0,pomos=0,streak=0,wake=0;
+  var ti=todayIdx(),run=0,max=0,perfect=0,active=0,pomos=0,streak=0,wake=0,hw=H.filter(function(h){return h.id==="wake"})[0];
   for(var i=0;i<DAYS&&i<=ti;i++){var c=cnt(i);
-    if(c>0){run++;active++;if(run>max)max=run}else if(!isSun(i)&&i<ti)run=0;
-    if(c===H.length)perfect++;pomos+=S.pomo[i]||0;if(done(i,H[0]))wake++}
+    if(c>0){run++;active++;if(run>max)max=run}else if(nAct(i)>0&&!isSun(i)&&i<ti)run=0;
+    if(c>0&&c===nAct(i))perfect++;pomos+=S.pomo[i]||0;if(hw&&done(i,hw))wake++}
   var s=Math.min(ti,DAYS-1);if(cnt(s)===0)s--;
-  for(;s>=0;s--){if(cnt(s)>0)streak++;else if(!isSun(s))break}
+  for(;s>=0;s--){if(cnt(s)>0)streak++;else if(nAct(s)>0&&!isSun(s))break}
   var c7=0;for(var j=Math.max(0,ti-7);j<ti;j++)if(missed(j))c7++;
-  var gold=0;for(var k=0;k<DAYS;k++)gold+=cnt(k)*2+(cnt(k)===H.length?10:0)+(S.pomo[k]||0)*3;
+  var gold=0;for(var k=0;k<DAYS;k++)gold+=cnt(k)*2+(cnt(k)>0&&cnt(k)===nAct(k)?10:0)+(S.pomo[k]||0)*3;
   return {max:max,perfect:perfect,active:active,pomos:pomos,streak:streak,wake:wake,hp:Math.max(0,100-15*c7),gold:gold};
 }
 function row(h){
   var v=V(sel,h.id),d=done(sel,h),g=goal(h),el=document.createElement("div");
-  el.className="habit"+(d?" on":"");
+  el.className="habit"+(d?" on":"");el.style.boxShadow="inset 6px 0 0 "+catOf(h).c;
   var sub=h.t==="chk"?"Toque quando fizer":h.t==="time"?"Acordar até "+g:h.t==="max"?"Máximo: "+g+" "+h.u:"Meta: "+g+" "+h.u;
   var ctl;
   if(h.t==="chk")ctl='<button class="chk" aria-label="Marcar '+h.n+'">'+(d?"✓":"")+'</button>';
@@ -220,7 +274,7 @@ function setVal(id,v){
   var before=cnt(sel);save();
   var L=level(totalXp()),m="";
   if(L>lastLevel)m="⬆️ Subiu para o nível "+L+": "+TITLES[L-1]+"!";
-  else if(cnt(sel)===H.length&&before<H.length)m="🏆 Dia completo! +30 XP de bônus";
+  else if(cnt(sel)===nAct(sel)&&before<nAct(sel))m="🏆 Dia completo! +30 XP de bônus";
   lastLevel=L;render(m);
 }
 var BADGES=[["🌱","Primeiro dia ativo",function(s){return s.active>=1}],["🏆","Dia completo",function(s){return s.perfect>=1}],["🔥","7 dias seguidos",function(s){return s.max>=7}],["⏰","Madrugador (7x)",function(s){return s.wake>=7}],["🍅","10 pomodoros",function(s){return s.pomos>=10}],["⭐","30 dias ativos",function(s){return s.active>=30}],["🛡️","Nível 5",function(s,L){return L>=5}],["💎","21 dias seguidos",function(s){return s.max>=21}],["👑","Nível 10",function(s,L){return L>=10}]];
@@ -237,18 +291,20 @@ function render(msg){
   document.getElementById("nx").textContent=L<10?"faltam "+(hi-xp):"nível máximo";
   document.getElementById("streak").textContent=st.streak;
   document.getElementById("gold").textContent=st.gold-S.shop.spent;
-  document.getElementById("today").textContent=cnt(tIdx())+"/"+H.length;
+  document.getElementById("today").textContent=cnt(tIdx())+"/"+nAct(tIdx());
   document.getElementById("daylbl").textContent="Dia "+Math.min(Math.max(ti+1,1),DAYS)+" de 100"+(sel!==ti?" · editando o dia "+(sel+1):"");
   document.getElementById("seltitle").textContent=sel===ti?"Missões de hoje":"Missões do dia "+(sel+1);
-  var h=document.getElementById("habits");h.innerHTML="";H.forEach(function(x){h.appendChild(row(x))});
+  var h=document.getElementById("habits");h.innerHTML="";CATS.forEach(function(c){var l=H.filter(function(x){return (x.cat||"outros")===c.id&&act(x,sel)});if(!l.length)return;
+    var t=document.createElement("div");t.className="cath";t.innerHTML='<i style="background:'+c.c+'"></i>'+esc(c.n);h.appendChild(t);l.forEach(function(x){h.appendChild(row(x))})});
+  if(!h.children.length)h.innerHTML='<div class="small">Nenhum hábito agendado para este dia.</div>';;
   var b=document.getElementById("badges");b.innerHTML="";
   BADGES.forEach(function(x){var on=x[2](st,L);b.innerHTML+='<div class="bd'+(on?"":" off")+'"><b>'+x[0]+'</b>'+x[1]+'</div>'});
   var g=document.getElementById("grid");g.innerHTML="";
   for(var i=0;i<DAYS;i++){(function(i){
     var c=document.createElement("button"),n=cnt(i);
-    c.className="cell"+(isSun(i)?" sun":"")+(missed(i)?" miss":"")+(i>ti?" fut":"")+(i===ti?" today":"")+(i===sel?" sel":"")+(n===H.length?" full":"");
-    c.textContent=i+1;c.setAttribute("aria-label","Dia "+(i+1)+", "+n+" de "+H.length);
-    if(n>0)c.style.background="color-mix(in srgb, var(--ember) "+Math.round((.25+.75*n/H.length)*100)+"%, var(--card2))";
+    c.className="cell"+(isSun(i)?" sun":"")+(missed(i)?" miss":"")+(i>ti?" fut":"")+(i===ti?" today":"")+(i===sel?" sel":"")+(n>0&&n===nAct(i)?" full":"");
+    c.textContent=i+1;c.setAttribute("aria-label","Dia "+(i+1)+", "+n+" de "+nAct(i));
+    if(n>0)c.style.background="color-mix(in srgb, var(--ember) "+Math.round((.25+.75*n/Math.max(1,nAct(i)))*100)+"%, var(--card2))";
     if(i<=ti)c.onclick=function(){sel=i;render();showTab("missoes")};
     g.appendChild(c);
   })(i)}
@@ -263,39 +319,50 @@ function render(msg){
     });
   }
   document.getElementById("msg").textContent=msg||"";
-  renderPlan();updPomo();renderShop();
-}
-var BOOKS=[["Mateus",28],["Marcos",16],["Lucas",24],["João",21]];
-var TREINO=["Descanso ativo: caminhada leve de 30 min","Peito e tríceps + flexões","Corrida leve de 30 min","Costas e bíceps","Corrida intervalada de 20 min + core","Pernas e glúteos","Corrida longa de 40 min + alongamento"];
-var ESTUDO=["Revisão leve: refazer só as questões que errou na semana (30 min)","Termodinâmica (90 min)","Mecânica dos fluidos (90 min)","Resistência dos materiais (90 min)","Elementos de máquinas (90 min)","Transferência de calor (90 min)","Português e Inglês: questões da banca (90 min)"];
-var PT="Português: ler 1 editorial e resumir a ideia central em 2 linhas",EN="Inglês: ler 1 artigo técnico de engenharia (15 min) e anotar 5 termos";
-var LEITURA=["Livre: o livro que você quiser, 20 min",PT,EN,PT,EN,PT,EN];
-function bibleRef(i){
-  if(isSun(i))return "Domingo livre: releia o trecho que mais marcou na semana";
-  var n=0;for(var k=0;k<=i;k++)if(!isSun(k))n++;
-  for(var b=0;b<BOOKS.length;b++){if(n<=BOOKS[b][1])return BOOKS[b][0]+" "+n;n-=BOOKS[b][1]}
-  return "Plano concluído: Provérbios "+dayDate(i).getDate();
+  renderPlan();updPomo();renderShop();renderStats();
 }
 function renderPlan(){
-  var w=dayDate(sel).getDay(),rows=[["Treino",TREINO[w]],["Estudo",ESTUDO[w]],["Leitura",LEITURA[w]],["Bíblia",bibleRef(sel)]];
-  var h=w===0?"<div><b>Domingo</b>Dia de descanso: não conta como falta.</div>":"";
-  rows.forEach(function(r){h+="<div><b>"+r[0]+"</b>"+r[1]+"</div>"});
+  var w=dayDate(sel).getDay(),N=["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+  var l=H.filter(function(h){return act(h,sel)}).sort(function(a,b){return (a.rt||"99:99")<(b.rt||"99:99")?-1:1});
+  var h='<div><b>'+N[w]+'</b>'+(l.length?l.map(function(x){return (x.rt?x.rt+" · ":"")+esc(x.i)+" "+esc(x.n)}).join("<br>"):"Nenhum hábito agendado para este dia.")+'</div>';
+  h+='<div><b>Anotações de '+N[w].toLowerCase()+' (repete toda semana)</b><textarea id="note" rows="3" placeholder="Foco do dia, treino, o que estudar..." aria-label="Anotações do dia"></textarea></div>';
   document.getElementById("plan").innerHTML=h;
+  var n=document.getElementById("note");n.value=S.notes[w]||"";n.onchange=function(){S.notes[w]=this.value;save()};
 }
-var PM={mode:"foco",left:1500,run:false,end:0,t:null};
+function pc(p){return p===null?"—":Math.round(p*100)+"%"}
+function row2(n,p,c){return '<div class="row"><span>'+esc(n)+'</span><div class="bar" style="height:10px"><i style="width:'+(p===null?0:p*100)+'%;background:'+c+'"></i></div><span>'+pc(p)+'</span></div>'}
+function rate(i){var n=nAct(i);return n?cnt(i)/n:null}
+function avg(a,b){var t=0,c=0;for(var i=Math.max(0,a);i<=b&&i<DAYS;i++){var r=rate(i);if(r!==null){t+=r;c++}}return c?t/c:null}
+function renderStats(){
+  var ti=Math.min(Math.max(todayIdx(),0),DAYS-1);
+  document.getElementById("statcards").innerHTML='<div class="stat"><b>'+pc(avg(ti-6,ti))+'</b><span>últimos 7 dias</span></div><div class="stat"><b>'+pc(avg(ti-29,ti))+'</b><span>últimos 30 dias</span></div><div class="stat"><b>'+pc(avg(0,ti))+'</b><span>desde o início</span></div>';
+  var L=["D","S","T","Q","Q","S","S"],h="",k,i,r;
+  for(k=6;k>=0;k--){i=ti-k;if(i<0){h+='<div class="b"><span></span><i style="height:0"></i><span>·</span></div>';continue}
+    r=rate(i);h+='<div class="b"><span>'+(r===null?"":Math.round(r*100))+'</span><i style="height:'+Math.round((r||0)*80)+'px;background:'+(r!==null&&r>=1?"var(--ok)":"var(--ember)")+'"></i><span>'+L[dayDate(i).getDay()]+'</span></div>'}
+  document.getElementById("stats7").innerHTML=h;
+  h="";for(var w=0;w*7<=ti;w++){r=avg(w*7,Math.min(w*7+6,ti));h+='<div class="b"><span>'+(r===null?"":Math.round(r*100))+'</span><i style="height:'+Math.round((r||0)*80)+'px"></i><span>S'+(w+1)+'</span></div>'}
+  document.getElementById("statsw").innerHTML=h;
+  function pr(x){var t=0,d=0;for(var j=0;j<=ti;j++)if(act(x,j)){t++;if(done(j,x))d++}return t?d/t:null}
+  var cat="";
+  CATS.forEach(function(c){var t=0,d=0;H.forEach(function(x){if((x.cat||"outros")!==c.id)return;for(var j=0;j<=ti;j++)if(act(x,j)){t++;if(done(j,x))d++}});if(t)cat+=row2(c.n,d/t,c.c)});
+  document.getElementById("statcat").innerHTML=cat||'<div class="small">Sem dados ainda.</div>';
+  var hs=H.map(function(x){return {x:x,p:pr(x)}}).filter(function(o){return o.p!==null}).sort(function(a,b){return b.p-a.p});
+  document.getElementById("stath").innerHTML=hs.map(function(o){return row2(o.x.i+" "+o.x.n,o.p,catOf(o.x).c)}).join("")||'<div class="small">Sem dados ainda.</div>';
+}
+var PM={mode:"foco",left:S.pset.foco*60,run:false,end:0,t:null};
 function fmt(s){return String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0")}
 function updPomo(){
   var n=S.pomo[tIdx()]||0;
   document.getElementById("pt").textContent=fmt(PM.left);
   document.getElementById("pmode").textContent=PM.mode==="foco"?"Foco":"Pausa";
   document.getElementById("pgo").textContent=PM.run?"Pausar":"Iniciar";
-  document.getElementById("pinfo").textContent="Hoje: "+n+" pomodoros ("+n*25+" min). Meta: 4, cerca de 2 h.";
+  document.getElementById("pinfo").textContent="Hoje: "+n+" pomodoros ("+n*S.pset.foco+" min). Meta sugerida: 4.";
 }
 function tick(){var l=Math.max(0,Math.round((PM.end-Date.now())/1000));PM.left=l;if(l===0){finish();return}updPomo()}
 function finish(){
   clearInterval(PM.t);PM.run=false;var m="";
-  if(PM.mode==="foco"){var ti=tIdx();S.pomo[ti]=(S.pomo[ti]||0)+1;save();PM.mode="pausa";PM.left=300;m="🍅 Pomodoro concluído! +5 XP. Hora da pausa."}
-  else{PM.mode="foco";PM.left=1500;m="Pausa acabou. Bora focar."}
+  if(PM.mode==="foco"){var ti=tIdx();S.pomo[ti]=(S.pomo[ti]||0)+1;save();PM.mode="pausa";PM.left=S.pset.pausa*60;m="🍅 Pomodoro concluído! +5 XP. Hora da pausa."}
+  else{PM.mode="foco";PM.left=S.pset.foco*60;m="Pausa acabou. Bora focar."}
   try{if(navigator.vibrate)navigator.vibrate(300)}catch(e){}
   var L=level(totalXp());if(L>lastLevel)m="⬆️ Subiu para o nível "+L+": "+TITLES[L-1]+"!";
   lastLevel=L;render(m);
@@ -304,12 +371,116 @@ document.getElementById("pgo").onclick=function(){
   if(PM.run){clearInterval(PM.t);PM.run=false}else{PM.end=Date.now()+PM.left*1000;PM.run=true;PM.t=setInterval(tick,500)}
   updPomo();
 };
-document.getElementById("preset").onclick=function(){clearInterval(PM.t);PM.run=false;PM.left=PM.mode==="foco"?1500:300;updPomo()};
-document.getElementById("pswap").onclick=function(){clearInterval(PM.t);PM.run=false;PM.mode=PM.mode==="foco"?"pausa":"foco";PM.left=PM.mode==="foco"?1500:300;updPomo()};
+document.getElementById("preset").onclick=function(){clearInterval(PM.t);PM.run=false;PM.left=plen();updPomo()};
+document.getElementById("pswap").onclick=function(){clearInterval(PM.t);PM.run=false;PM.mode=PM.mode==="foco"?"pausa":"foco";PM.left=plen();updPomo()};
 document.getElementById("reset").onclick=function(){
-  if(this.dataset.arm){S={start:dkey(new Date()),vals:{},goals:{},pomo:{},shop:{items:JSON.parse(JSON.stringify(DEFAULT_SHOP)),bag:[],spent:0}};save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";document.getElementById("goals").innerHTML="";document.getElementById("goals").dataset.built="";render("Jornada reiniciada. Dia 1.");return}
+  if(this.dataset.arm){S={start:dkey(new Date()),vals:{},goals:{},pomo:{},shop:{items:JSON.parse(JSON.stringify(DEFAULT_SHOP)),bag:[],spent:0},pset:{foco:25,pausa:5}};S.habits=JSON.parse(JSON.stringify(DEFAULT_H));H=S.habits;save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";buildGoals();syncPset();render("Jornada reiniciada. Dia 1.");return}
   this.dataset.arm="1";this.textContent="Toque de novo para apagar tudo";
 };
+var armedDel=null,editId=null,fDays=[0,1,2,3,4,5,6];
+function hm(t){document.getElementById("hmsg").textContent=t}
+function plen(){return (PM.mode==="foco"?S.pset.foco:S.pset.pausa)*60}
+function syncPset(){document.getElementById("pf").value=S.pset.foco;document.getElementById("pp").value=S.pset.pausa;if(!PM.run)PM.left=plen()}
+["pf","pp"].forEach(function(id){document.getElementById(id).onchange=function(){
+  var v=Math.round(parseFloat(this.value));if(!(v>=1)){syncPset();return}
+  v=Math.min(v,id==="pf"?180:60);S.pset[id==="pf"?"foco":"pausa"]=v;save();syncPset();updPomo()}});
+function catOf(h){return CATS.filter(function(c){return c.id===(h.cat||"outros")})[0]||CATS[CATS.length-1]}
+function daysTxt(x){var d=x.days;if(!d||d.length===7)return "Todos os dias";var k=d.slice().sort().join("");if(k==="12345")return "Dias úteis";if(k==="06")return "Fim de semana";var N=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];return d.slice().sort().map(function(i){return N[i]}).join(", ")}
+function paintDays(){document.querySelectorAll("#hd button[data-d]").forEach(function(b){b.classList.toggle("on",fDays.indexOf(+b.dataset.d)>-1)})}
+function typeUI(t){var g=document.getElementById("hg"),u=document.getElementById("hu");g.type=t==="time"?"time":"number";g.disabled=(t==="chk");u.disabled=(t==="chk"||t==="time")}
+function resetForm(){
+  editId=null;["hn","he","hg","hu","hr"].forEach(function(id){document.getElementById(id).value=""});
+  document.getElementById("ht").value="min";typeUI("min");document.getElementById("hc").value="saude";
+  fDays=[0,1,2,3,4,5,6];paintDays();document.getElementById("hadd").textContent="Adicionar";document.getElementById("hcancel").hidden=true;document.getElementById("hft").textContent="Novo hábito";
+}
+function startEdit(x){
+  editId=x.id;document.getElementById("hn").value=x.n;document.getElementById("he").value=x.i;document.getElementById("hc").value=x.cat||"outros";
+  document.getElementById("ht").value=x.t;typeUI(x.t);document.getElementById("hg").value=x.t==="chk"?"":goal(x);document.getElementById("hu").value=x.u||"";document.getElementById("hr").value=x.rt||"";
+  fDays=(x.days||[0,1,2,3,4,5,6]).slice();paintDays();
+  document.getElementById("hadd").textContent="Salvar alterações";document.getElementById("hcancel").hidden=false;document.getElementById("hft").textContent="Editar hábito";
+  document.getElementById("hft").scrollIntoView({block:"start"});
+}
+function initForm(){
+  var s=document.getElementById("hc");CATS.forEach(function(c){var o=document.createElement("option");o.value=c.id;o.textContent=c.n;s.appendChild(o)});
+  document.querySelectorAll("#hd button[data-d]").forEach(function(b){b.onclick=function(){var d=+b.dataset.d,k=fDays.indexOf(d);if(k>-1)fDays.splice(k,1);else fDays.push(d);paintDays()}});
+  document.querySelectorAll("button[data-p]").forEach(function(b){b.onclick=function(){fDays=b.dataset.p==="all"?[0,1,2,3,4,5,6]:b.dataset.p==="work"?[1,2,3,4,5]:[0,6];paintDays()}});
+  document.getElementById("ht").onchange=function(){typeUI(this.value);document.getElementById("hg").value=""};
+  document.getElementById("hcancel").onclick=resetForm;
+  document.getElementById("sunfree").onchange=function(){S.sunFree=this.checked;save();render()};
+  paintDays();updNotif();
+}
+function buildGoals(){
+  var gl=document.getElementById("goals");gl.dataset.built=1;gl.innerHTML="";
+  document.getElementById("sunfree").checked=S.sunFree!==false;
+  if(!H.length)gl.innerHTML='<div class="small" style="padding:12px 0">Nenhum hábito. Crie o primeiro abaixo.</div>';
+  H.forEach(function(x){
+    var d=document.createElement("div");d.className="g";
+    var inp=x.t==="chk"?'<span class="u" style="min-width:70px">só marcar</span>':'<input class="val" id="g_'+x.id+'" type="'+(x.t==="time"?"time":"number")+'" '+(x.t==="time"?"":'step="'+(x.step||1)+'" min="0" inputmode="decimal" ')+'value="'+goal(x)+'" aria-label="Meta de '+esc(x.n)+'">'+(x.u&&x.t!=="time"?'<span class="u">'+esc(x.u)+'</span>':"");
+    d.innerHTML='<label>'+esc(x.i)+" "+esc(x.n)+(x.t==="max"?" (máx.)":"")+'<div class="sb2">'+esc(catOf(x).n)+" · "+daysTxt(x)+(x.rt?" · ⏰ "+x.rt:"")+'</div></label>'+inp+'<button class="x ed" aria-label="Editar '+esc(x.n)+'">✎</button><button class="x del'+(armedDel===x.id?" arm":"")+'" aria-label="Excluir '+esc(x.n)+'">'+(armedDel===x.id?"Excluir?":"✕")+'</button>';
+    var i=d.querySelector("input");
+    if(i)i.onchange=function(){var v=this.value;S.goals[x.id]=x.t==="time"?v:parseFloat(v);if(S.goals[x.id]===""||S.goals[x.id]!==S.goals[x.id])delete S.goals[x.id];save();render("Meta atualizada")};
+    d.querySelector(".ed").onclick=function(){startEdit(x)};
+    d.querySelector(".del").onclick=function(){delHabit(x.id)};
+    gl.appendChild(d);
+  });
+}
+function delHabit(id){
+  if(armedDel!==id){armedDel=id;buildGoals();return}
+  armedDel=null;
+  for(var i=H.length-1;i>=0;i--)if(H[i].id===id)H.splice(i,1);
+  if(editId===id)resetForm();
+  delete S.goals[id];save();buildGoals();render("Hábito excluído.");
+}
+document.getElementById("hadd").onclick=function(){
+  var n=document.getElementById("hn").value.trim(),t=document.getElementById("ht").value,g=document.getElementById("hg").value;
+  if(!n){hm("Dê um nome ao hábito.");return}
+  if(t!=="chk"&&g===""){hm("Defina o valor da meta.");return}
+  if(!fDays.length){hm("Escolha pelo menos um dia da semana.");return}
+  var h=editId?H.filter(function(x){return x.id===editId})[0]:null,novo=!h;
+  if(novo){h={id:"h"+Date.now(),from:tIdx()};H.push(h)}
+  h.n=n;h.i=document.getElementById("he").value.trim()||"⭐";h.cat=document.getElementById("hc").value;h.t=t;
+  if(fDays.length===7)delete h.days;else h.days=fDays.slice().sort();
+  var rt=document.getElementById("hr").value;if(rt)h.rt=rt;else delete h.rt;
+  if(t==="time"){h.g=g;delete h.u;delete h.step}
+  else if(t==="chk"){delete h.g;delete h.u;delete h.step}
+  else{h.g=parseFloat(g);h.u=document.getElementById("hu").value.trim();h.step=Number.isInteger(h.g)?1:.25}
+  delete S.goals[h.id];save();resetForm();buildGoals();
+  render(novo?"Hábito criado: "+n:"Hábito atualizado: "+n);hm(novo?"Criado! Ele vale a partir de hoje.":"Alterações salvas.");
+};
+function notify(title,body){
+  var ok=false;
+  try{
+    if(typeof Notification!=="undefined"&&Notification.permission==="granted"){
+      if(navigator.serviceWorker&&navigator.serviceWorker.getRegistration){
+        navigator.serviceWorker.getRegistration().then(function(r){if(r)r.showNotification(title,{body:body,icon:"icon-192.png",tag:title});else new Notification(title,{body:body})});ok=true;
+      }else{new Notification(title,{body:body});ok=true}
+    }
+  }catch(e){}
+  if(!ok)document.getElementById("msg").textContent="⏰ "+title+(body?": "+body:"");
+}
+function updNotif(){
+  var b=document.getElementById("notif"),t=document.getElementById("notifst");
+  if(typeof Notification==="undefined"){b.disabled=true;t.textContent="Este navegador não suporta notificações. No iPhone, instale o app na Tela de Início (iOS 16.4 ou mais novo) e abra por ele.";return}
+  var p=Notification.permission;
+  if(p==="granted"){b.disabled=false;b.textContent="Enviar notificação de teste";t.textContent="Notificações ativadas."}
+  else if(p==="denied"){b.disabled=true;t.textContent="Notificações bloqueadas. Libere nos ajustes do navegador ou do iPhone."}
+  else{b.disabled=false;b.textContent="Ativar notificações";t.textContent="Ainda não ativadas."}
+}
+document.getElementById("notif").onclick=function(){
+  if(typeof Notification==="undefined")return;
+  if(Notification.permission==="granted"){notify("Jornada 100","Lembretes funcionando!");return}
+  try{Notification.requestPermission().then(updNotif)}catch(e){}
+};
+function checkReminders(){
+  var ti=todayIdx();if(ti<0||ti>=DAYS)return;
+  var now=new Date(),k0=dkey(now),mins=now.getHours()*60+now.getMinutes();
+  if(S.nday!==k0){S.nday=k0;S.notified={}}
+  H.forEach(function(h){
+    if(!h.rt||!act(h,ti)||done(ti,h))return;
+    var p=h.rt.split(":"),rm=(+p[0])*60+(+p[1]);
+    if(mins>=rm&&mins<rm+60&&!S.notified[h.id]){S.notified[h.id]=1;save();notify("Hora de: "+h.n,h.t==="chk"?"Toque no app para marcar.":"Registre no app quando terminar.")}
+  });
+}
 var armed=null;
 function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function bal(){return stats().gold-S.shop.spent}
@@ -344,8 +515,10 @@ document.getElementById("nadd").onclick=function(){
 var TABS=["missoes","foco","jornada","loja","metas"];
 function showTab(t){TABS.forEach(function(x){document.getElementById("tab-"+x).hidden=x!==t;var b=document.getElementById("nav-"+x);b.setAttribute("aria-selected",x===t?"true":"false");b.classList.toggle("on",x===t)});armed=null;window.scrollTo(0,0)}
 TABS.forEach(function(x){document.getElementById("nav-"+x).onclick=function(){showTab(x)}});
+initForm();buildGoals();syncPset();
 render();
 showTab("missoes");
+setInterval(checkReminders,30000);document.addEventListener("visibilitychange",function(){if(!document.hidden){checkReminders();render()}});checkReminders();
 </script>
 <script>
 if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){
