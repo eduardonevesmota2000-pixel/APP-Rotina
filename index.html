@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jornada 100</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Jornada">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f3efe7;--card:#fffdf8;--ink:#1b2030;--mut:#6d7385;--ember:#e8590c;--moss:#2f9e63;--line:#ddd6c8;--cell:#e6e0d3;
@@ -209,6 +217,11 @@ document.getElementById("pgo").onclick=function(){
 document.getElementById("preset").onclick=function(){clearInterval(PM.t);PM.run=false;PM.left=PM.mode==="foco"?1500:300;updPomo()};
 document.getElementById("pswap").onclick=function(){clearInterval(PM.t);PM.run=false;PM.mode=PM.mode==="foco"?"pausa":"foco";PM.left=PM.mode==="foco"?1500:300;updPomo()};
 render();
+</script>
+<script>
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){
+  window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});
+}
 </script>
 </body>
 </html>
