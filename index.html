@@ -102,10 +102,12 @@ textarea{font:inherit;font-size:15px;padding:10px;border-radius:10px;border:2px 
 .bars .row{display:grid;grid-template-columns:130px 1fr 44px;gap:8px;align-items:center;margin-bottom:8px;font-size:12px}
 .bars .row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bars .row span:last-child{text-align:right;color:var(--mut)}
+.authwrap{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;padding:20px;z-index:50;overflow:auto}
+.authbox{width:100%;max-width:380px;display:grid;gap:12px;text-align:center}
 </style>
 </head>
 <body>
-<main>
+<main id="app" hidden>
   <section class="hero">
     <div class="av" id="av">🥚</div>
     <div class="hi">
@@ -198,10 +200,37 @@ textarea{font:inherit;font-size:15px;padding:10px;border-radius:10px;border:2px 
   </div>
   <div class="msg" id="hmsg" aria-live="polite"></div>
 
+  <h2>Conta</h2>
+  <div class="goalbox" style="padding:12px 14px">
+    <div id="acct" class="small"></div>
+    <div id="syncst" class="small" style="margin:6px 0"></div>
+    <div class="prow" style="justify-content:flex-start">
+      <button class="pb main" id="gologin" hidden>Entrar ou criar conta</button>
+      <button class="pb" id="syncnow" hidden>Sincronizar agora</button>
+      <button class="pb" id="logout" hidden>Sair</button>
+    </div>
+  </div>
   <p class="small" style="margin-top:18px">Regras: hábito vale +10 XP e dia completo +30. Pomodoro +5. Dia útil com menos da metade dos hábitos tira 20 XP. Domingo livre nunca penaliza (ajustável em Hábitos).</p>
   <button class="link" id="reset">Recomeçar jornada do zero</button>
 </section>
 </main>
+<div class="authwrap" id="auth" hidden><div class="authbox">
+  <div class="px" style="color:var(--gold);font-size:16px">Jornada 100</div>
+  <p class="small">Entre para salvar seu progresso na nuvem e usar em qualquer aparelho.</p>
+  <input class="val" style="width:100%" id="ae" type="email" autocomplete="email" placeholder="E-mail" aria-label="E-mail">
+  <input class="val" style="width:100%" id="ap" type="password" autocomplete="current-password" placeholder="Senha (mínimo 6 caracteres)" aria-label="Senha">
+  <div class="prow"><button class="pb main" id="alogin">Entrar</button><button class="pb" id="asign">Criar conta</button></div>
+  <div class="msg" id="amsg" aria-live="polite"></div>
+  <button class="link" id="aguest">Continuar sem conta (só neste aparelho)</button>
+</div></div>
+<div class="authwrap" id="choice" hidden><div class="authbox">
+  <div class="px" style="color:var(--gold);font-size:14px">Primeiro acesso</div>
+  <p>Esta conta ainda está vazia. O que fazer?</p>
+  <button class="pb main" id="cimport">Importar os dados deste aparelho</button>
+  <button class="pb" id="cfresh">Começar do zero</button>
+  <p class="small">Começar do zero apaga os dados locais deste aparelho.</p>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <script>
 var CATS=[{id:"saude",n:"Saúde",c:"#4cd694"},{id:"estudos",n:"Estudos",c:"#6ea8ff"},{id:"trabalho",n:"Trabalho",c:"#ffc83d"},{id:"pessoal",n:"Cuidados pessoais",c:"#ff8fb8"},{id:"outros",n:"Outros",c:"#9a92c4"}];
 var DEFAULT_H=[
@@ -216,7 +245,7 @@ var DAYS=100,TITLES=["Iniciante","Aprendiz","Disciplinado","Constante","Focado",
 var AV=["🥚","🐣","🐥","🦊","🐺","🦁","🐲","🧙","🦄","👑"];
 var KEY="jornada100v2",mem=null;
 function load(){try{var s=localStorage.getItem(KEY);if(s)return JSON.parse(s)}catch(e){}return mem}
-function save(){mem=S;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){mem=S;if(user){S.dirty=true;schedSync()}try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function midnight(k){var p=k.split("-");return new Date(+p[0],+p[1]-1,+p[2])}
 var S=load();
@@ -374,7 +403,7 @@ document.getElementById("pgo").onclick=function(){
 document.getElementById("preset").onclick=function(){clearInterval(PM.t);PM.run=false;PM.left=plen();updPomo()};
 document.getElementById("pswap").onclick=function(){clearInterval(PM.t);PM.run=false;PM.mode=PM.mode==="foco"?"pausa":"foco";PM.left=plen();updPomo()};
 document.getElementById("reset").onclick=function(){
-  if(this.dataset.arm){S={start:dkey(new Date()),vals:{},goals:{},pomo:{},shop:{items:JSON.parse(JSON.stringify(DEFAULT_SHOP)),bag:[],spent:0},pset:{foco:25,pausa:5}};S.habits=JSON.parse(JSON.stringify(DEFAULT_H));H=S.habits;save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";buildGoals();syncPset();render("Jornada reiniciada. Dia 1.");return}
+  if(this.dataset.arm){if(user)wipeRemote();S={start:dkey(new Date()),vals:{},goals:{},pomo:{},shop:{items:JSON.parse(JSON.stringify(DEFAULT_SHOP)),bag:[],spent:0},pset:{foco:25,pausa:5}};S.habits=JSON.parse(JSON.stringify(DEFAULT_H));H=S.habits;S.notes={};S.notified={};if(user)S.uid=user.id;save();sel=0;lastLevel=1;this.dataset.arm="";this.textContent="Recomeçar jornada do zero";buildGoals();syncPset();render("Jornada reiniciada. Dia 1.");return}
   this.dataset.arm="1";this.textContent="Toque de novo para apagar tudo";
 };
 var armedDel=null,editId=null,fDays=[0,1,2,3,4,5,6];
@@ -494,7 +523,7 @@ function renderShop(){
     d.className="item";
     d.innerHTML='<span class="ic">'+it.e+'</span><div class="mid"><div class="nm">'+esc(it.n)+'</div><div class="sb">🪙 '+it.p+'</div></div><button class="pb'+(ok?" main":"")+'">'+(arm?"Confirmar":ok?"Comprar":"Faltam "+(it.p-b))+'</button><button class="x" aria-label="Remover da loja">✕</button>';
     var bs=d.querySelectorAll("button");
-    bs[0].onclick=function(){if(!ok)return;if(!arm){armed=it.id;renderShop();return}armed=null;S.shop.spent+=it.p;S.shop.bag.push({n:it.n,e:it.e});save();render();sm("🛍️ Comprou: "+it.n+". Está na sua mochila.")};
+    bs[0].onclick=function(){if(!ok)return;if(!arm){armed=it.id;renderShop();return}armed=null;S.shop.spent+=it.p;S.shop.bag.push({uid:uuid(),n:it.n,e:it.e,p:it.p,at:new Date().toISOString()});save();render();sm("🛍️ Comprou: "+it.n+". Está na sua mochila.")};
     bs[1].onclick=function(){S.shop.items=S.shop.items.filter(function(x){return x.id!==it.id});save();renderShop()};
     s.appendChild(d);
   });
@@ -503,7 +532,7 @@ function renderShop(){
   S.shop.bag.forEach(function(it,i){
     var d=document.createElement("div");d.className="item";
     d.innerHTML='<span class="ic">'+it.e+'</span><div class="mid"><div class="nm">'+esc(it.n)+'</div></div><button class="pb main">Usar</button>';
-    d.querySelector("button").onclick=function(){S.shop.bag.splice(i,1);save();renderShop();sm("Aproveite: "+it.n+"! Você merece.")};
+    d.querySelector("button").onclick=function(){var u=S.shop.bag.splice(i,1)[0];u.used=new Date().toISOString();(S.shop.used=S.shop.used||[]).push(u);save();renderShop();sm("Aproveite: "+it.n+"! Você merece.")};
     g.appendChild(d);
   });
 }
@@ -515,10 +544,185 @@ document.getElementById("nadd").onclick=function(){
 var TABS=["missoes","foco","jornada","loja","metas"];
 function showTab(t){TABS.forEach(function(x){document.getElementById("tab-"+x).hidden=x!==t;var b=document.getElementById("nav-"+x);b.setAttribute("aria-selected",x===t?"true":"false");b.classList.toggle("on",x===t)});armed=null;window.scrollTo(0,0)}
 TABS.forEach(function(x){document.getElementById("nav-"+x).onclick=function(){showTab(x)}});
+
+/* ===== Conta e banco de dados (Supabase) ===== */
+var SB_URL="https://rdzzejhjyhhhcjetwcnj.supabase.co",SB_KEY="sb_publishable_aApHftgO50l1IQGUzB8AJA_HzUi4pvV";
+var sb=null,user=null,snap=null,syncT=null,syncing=false,syncAgain=false,gate=Promise.resolve(),lastPull=0;
+try{if(window.supabase)sb=window.supabase.createClient(SB_URL,SB_KEY)}catch(e){}
+function uuid(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return (c==="x"?r:(r&3|8)).toString(16)})}
+function dkeyOf(start,i){var d=midnight(start);d.setDate(d.getDate()+i);return dkey(d)}
+function diffDays(a,b){return Math.round((midnight(b)-midnight(a))/864e5)}
+function t5(v){return v?String(v).slice(0,5):null}
+function hhmm(){var n=new Date();return String(n.getHours()).padStart(2,"0")+":"+String(n.getMinutes()).padStart(2,"0")}
+function setStatus(t){var e=document.getElementById("syncst");if(e)e.textContent=t}
+function emptySnap(){return {habits:{},entries:{},shop:{},purch:{},pomo:{},settings:null}}
+function newState(){return {start:dkey(new Date()),vals:{},goals:{},pomo:{},notes:{},notified:{},pset:{foco:25,pausa:5},habits:JSON.parse(JSON.stringify(DEFAULT_H)),shop:{items:JSON.parse(JSON.stringify(DEFAULT_SHOP)),bag:[],used:[],spent:0}}}
+function build(st){
+  var b=emptySnap();
+  st.habits.forEach(function(h,i){
+    if(!h.uid)h.uid=uuid();
+    var g=(st.goals&&st.goals[h.id]!==undefined&&st.goals[h.id]!=="")?st.goals[h.id]:h.g;
+    b.habits[h.uid]={id:h.uid,slug:h.id,name:h.n,emoji:h.i,category:h.cat||"outros",kind:h.t,
+      goal_num:(h.t==="min"||h.t==="max")?(Number(g)||0):null,goal_time:h.t==="time"?(t5(g)||"06:00"):null,
+      unit:h.u||null,days:h.days?h.days.slice():null,reminder:h.rt||null,starts_on:dkeyOf(st.start,h.from||0),archived:false,pos:i};
+  });
+  Object.keys(st.vals).forEach(function(di){
+    var day=dkeyOf(st.start,+di),o=st.vals[di];
+    Object.keys(o).forEach(function(hid){
+      var h=st.habits.filter(function(x){return x.id===hid})[0],v=o[hid];
+      if(!h||v===undefined||v===null||v==="")return;
+      b.entries[h.uid+"|"+day]={habit_id:h.uid,day:day,value_num:h.t==="time"?null:(Number(v)||0),value_time:h.t==="time"?String(v):null};
+    });
+  });
+  st.shop.items.forEach(function(it){if(!it.uid)it.uid=uuid();b.shop[it.uid]={id:it.uid,name:it.n,emoji:it.e||"🎁",price:it.p}});
+  (st.shop.bag||[]).concat(st.shop.used||[]).forEach(function(it){
+    if(!it.uid)it.uid=uuid();if(!it.at)it.at=new Date().toISOString();if(it.p==null)it.p=0;
+    b.purch[it.uid]={id:it.uid,name:it.n,emoji:it.e||"🎁",price:it.p,bought_at:it.at,used_at:it.used||null};
+  });
+  Object.keys(st.pomo).forEach(function(di){if(st.pomo[di]>0)b.pomo[dkeyOf(st.start,+di)]=st.pomo[di]});
+  b.settings={user_id:user?user.id:null,start_date:st.start,sun_free:st.sunFree!==false,pomo_focus:st.pset.foco,pomo_break:st.pset.pausa,notes:st.notes||{}};
+  return b;
+}
+function fromRemote(R){
+  var s0=R.settings[0],st={start:s0.start_date,vals:{},goals:{},pomo:{},notes:s0.notes||{},notified:{},sunFree:s0.sun_free,
+    pset:{foco:s0.pomo_focus,pausa:s0.pomo_break},habits:[],shop:{items:[],bag:[],used:[],spent:0},uid:user.id,dirty:false},by={};
+  R.habits.slice().sort(function(a,b){return a.pos-b.pos}).forEach(function(h){
+    var o={id:h.slug||h.id,uid:h.id,n:h.name,i:h.emoji,cat:h.category,t:h.kind,from:Math.max(0,diffDays(s0.start_date,h.starts_on))};
+    if(h.kind==="time")o.g=t5(h.goal_time);
+    else if(h.kind!=="chk"){o.g=Number(h.goal_num);o.u=h.unit||"";o.step=Number.isInteger(o.g)?1:.25}
+    if(h.days&&h.days.length)o.days=h.days.slice();
+    if(h.reminder)o.rt=t5(h.reminder);
+    st.habits.push(o);by[h.id]=o;
+  });
+  R.entries.forEach(function(e){var h=by[e.habit_id];if(!h)return;var di=diffDays(s0.start_date,e.day);(st.vals[di]=st.vals[di]||{})[h.id]=h.t==="time"?t5(e.value_time):Number(e.value_num)});
+  R.pomodoros.forEach(function(p){var di=diffDays(s0.start_date,p.day);st.pomo[di]=(st.pomo[di]||0)+1});
+  R.shop_items.forEach(function(x){st.shop.items.push({id:x.id,uid:x.id,e:x.emoji,n:x.name,p:x.price})});
+  R.purchases.forEach(function(x){st.shop.spent+=x.price;var it={uid:x.id,n:x.name,e:x.emoji,p:x.price,at:x.bought_at};if(x.used_at){it.used=x.used_at;st.shop.used.push(it)}else st.shop.bag.push(it)});
+  return st;
+}
+async function q(p){var r=await p;if(r.error)throw r.error;return r}
+async function all(n){var out=[],from=0;for(;;){var qy=sb.from(n).select("*");if(n!=="settings")qy=qy.order("id");var r=await q(qy.range(from,from+999));out=out.concat(r.data);if(r.data.length<1000)break;from+=1000}return out}
+async function fetchRemote(){
+  var names=["settings","habits","entries","pomodoros","shop_items","purchases"],res=await Promise.all(names.map(all)),R={};
+  names.forEach(function(n,i){R[n]=res[i]});return R;
+}
+function schedSync(){clearTimeout(syncT);syncT=setTimeout(syncUp,1500);setStatus("Salvando…")}
+async function syncUp(){
+  if(!user||!sb||!snap)return;
+  if(syncing){syncAgain=true;return}
+  syncing=true;
+  try{
+    await gate;
+    var n=build(S),k,rows,del;
+    try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+    var ch=function(a,b){var r=[];for(var x in a)if(!b[x]||JSON.stringify(b[x])!==JSON.stringify(a[x]))r.push(a[x]);return r};
+    if(JSON.stringify(snap.settings)!==JSON.stringify(n.settings)){await q(sb.from("settings").upsert(n.settings));snap.settings=n.settings}
+    rows=ch(n.habits,snap.habits);if(rows.length)await q(sb.from("habits").upsert(rows));
+    rows=ch(n.entries,snap.entries);if(rows.length)await q(sb.from("entries").upsert(rows,{onConflict:"habit_id,day"}));
+    for(k in snap.entries)if(!n.entries[k]&&n.habits[snap.entries[k].habit_id])await q(sb.from("entries").delete().eq("habit_id",snap.entries[k].habit_id).eq("day",snap.entries[k].day));
+    snap.entries=n.entries;
+    rows=ch(n.purch,snap.purch);if(rows.length)await q(sb.from("purchases").upsert(rows));snap.purch=n.purch;
+    rows=ch(n.shop,snap.shop);if(rows.length)await q(sb.from("shop_items").upsert(rows));
+    del=Object.keys(snap.shop).filter(function(x){return !n.shop[x]});if(del.length)await q(sb.from("shop_items").delete().in("id",del));
+    snap.shop=n.shop;
+    del=Object.keys(snap.habits).filter(function(x){return !n.habits[x]});if(del.length)await q(sb.from("habits").delete().in("id",del));
+    snap.habits=n.habits;
+    for(k in n.pomo){var d=n.pomo[k]-(snap.pomo[k]||0);if(d>0){var pr=[];for(var i=0;i<d;i++)pr.push({day:k,minutes:S.pset.foco});await q(sb.from("pomodoros").insert(pr))}snap.pomo[k]=n.pomo[k]}
+    if(!syncAgain){S.dirty=false;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+    setStatus("Sincronizado às "+hhmm());
+  }catch(e){setStatus("Sem conexão ou erro ao salvar. Suas alterações ficam neste aparelho e serão enviadas depois.")}
+  syncing=false;if(syncAgain){syncAgain=false;schedSync()}
+}
+function wipeRemote(){
+  snap=emptySnap();var z="00000000-0000-0000-0000-000000000000";
+  gate=(async function(){
+    var t=["entries","pomodoros","purchases","shop_items","habits"];
+    for(var i=0;i<t.length;i++)await q(sb.from(t[i]).delete().neq("id",z));
+    await q(sb.from("settings").delete().neq("user_id",z));
+  })().catch(function(){});
+  return gate;
+}
+function applyState(ns){
+  S=ns;S.vals=S.vals||{};S.goals=S.goals||{};S.pomo=S.pomo||{};S.notes=S.notes||{};S.notified=S.notified||{};
+  S.pset=S.pset||{foco:25,pausa:5};S.shop=S.shop||{items:[],bag:[],used:[],spent:0};S.dirty=false;
+  if(user)S.uid=user.id;
+  H=S.habits;H.forEach(function(h){if(!h.cat){var d=DEFAULT_H.filter(function(x){return x.id===h.id})[0];h.cat=d?d.cat:"outros"}});
+  mem=S;sel=tIdx();lastLevel=level(totalXp());armedDel=null;editId=null;
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  buildGoals();syncPset();render();
+}
+function el(id){return document.getElementById(id)}
+function showApp(){el("app").hidden=false;el("auth").hidden=true;el("choice").hidden=true}
+function showAuth(){el("app").hidden=true;el("choice").hidden=true;el("auth").hidden=false}
+function showChoice(){el("app").hidden=true;el("auth").hidden=true;el("choice").hidden=false}
+function updAcct(){
+  el("acct").textContent=user?"Conectado como "+user.email+".":"Sem conta: seus dados ficam só neste aparelho.";
+  el("logout").hidden=!user;el("syncnow").hidden=!user;el("gologin").hidden=!!user;
+}
+async function onLogin(u){
+  user=u;setStatus("Carregando…");
+  var R;
+  try{R=await fetchRemote()}
+  catch(e){
+    if(S.uid===u.id){snap=null;showApp();updAcct();setStatus("Sem conexão. Usando os dados salvos neste aparelho.");return}
+    user=null;el("amsg").textContent="Não consegui carregar sua conta. Verifique a internet e se as tabelas foram criadas.";showAuth();return;
+  }
+  lastPull=Date.now();
+  if(R.settings.length){
+    var rs=fromRemote(R);snap=build(rs);
+    if(S.uid===u.id&&S.dirty){showApp();await syncUp()}else applyState(rs);
+    showApp();setStatus("Sincronizado às "+hhmm());
+  }else{snap=emptySnap();showChoice()}
+  updAcct();
+}
+function authMsg(e){var m=(e&&e.message)||"Erro.";if(/Invalid login/i.test(m))return "E-mail ou senha incorretos.";if(/already registered/i.test(m))return "Este e-mail já tem conta. Use Entrar.";if(/at least 6/i.test(m))return "A senha precisa ter pelo menos 6 caracteres.";if(/not confirmed/i.test(m))return "Confirme seu e-mail pelo link que enviamos e tente de novo.";return m}
+async function doAuth(sign){
+  var m=el("amsg"),email=el("ae").value.trim(),pw=el("ap").value;
+  if(!sb){m.textContent="Serviço de conta indisponível agora (sem internet?).";return}
+  if(!email||!pw){m.textContent="Preencha e-mail e senha.";return}
+  m.textContent="Aguarde…";
+  try{
+    var r=sign?await sb.auth.signUp({email:email,password:pw}):await sb.auth.signInWithPassword({email:email,password:pw});
+    if(r.error){m.textContent=authMsg(r.error);return}
+    if(r.data&&r.data.session){m.textContent="";await onLogin(r.data.session.user)}
+    else m.textContent="Conta criada! Confirme pelo link enviado ao seu e-mail e depois toque em Entrar.";
+  }catch(e){m.textContent=authMsg(e)}
+}
+el("alogin").onclick=function(){doAuth(false)};
+el("asign").onclick=function(){doAuth(true)};
+el("aguest").onclick=function(){S.guest=true;save();showApp();updAcct()};
+el("gologin").onclick=function(){showAuth()};
+el("syncnow").onclick=function(){if(S.dirty&&snap)syncUp();else onLogin(user)};
+el("logout").onclick=async function(){
+  setStatus("Saindo…");
+  try{if(S.dirty&&snap)await syncUp();await sb.auth.signOut()}catch(e){}
+  try{localStorage.removeItem(KEY)}catch(e){}
+  location.reload();
+};
+el("cimport").onclick=async function(){S.uid=user.id;S.guest=false;S.dirty=true;showApp();updAcct();await syncUp()};
+el("cfresh").onclick=async function(){applyState(newState());S.dirty=true;showApp();updAcct();await syncUp()};
+window.addEventListener("online",function(){if(!user)return;if(!snap)onLogin(user);else if(S.dirty)syncUp()});
+document.addEventListener("visibilitychange",function(){
+  if(document.hidden||!user||syncing)return;
+  if(!snap)onLogin(user);else if(S.dirty)syncUp();else if(Date.now()-lastPull>30000)onLogin(user);
+});
+async function boot(){
+  try{
+    if(!sb){showApp();updAcct();setStatus("Serviço de conta indisponível. Modo local.");return}
+    var r=await sb.auth.getSession();
+    if(r.data&&r.data.session)await onLogin(r.data.session.user);
+    else if(S.guest)showApp();
+    else showAuth();
+    sb.auth.onAuthStateChange(function(ev){if(ev==="SIGNED_OUT"&&user){user=null;location.reload()}});
+  }catch(e){showApp()}
+  updAcct();
+}
+
 initForm();buildGoals();syncPset();
 render();
 showTab("missoes");
 setInterval(checkReminders,30000);document.addEventListener("visibilitychange",function(){if(!document.hidden){checkReminders();render()}});checkReminders();
+boot();
 </script>
 <script>
 if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){
